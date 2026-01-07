@@ -42,8 +42,18 @@ defmodule Boltx.Error do
 
   """
   @spec message(t()) :: String.t()
-  def message(%__MODULE__{code: code, module: module}) do
-    module.format_error(code)
+  def message(%__MODULE__{bolt: %{code: code, message: message}})
+      when is_binary(code) and is_binary(message) do
+    "#{code}: #{message}"
+  end
+
+  def message(%__MODULE__{code: code, module: module} = error) do
+    :erlang.function_exported(module, :format_error, 1)
+    |> if do
+      module.format_error(code)
+    else
+      "An error occurred: #{inspect(error)}"
+    end
   end
 
   @doc """
